@@ -1,6 +1,6 @@
 # ScopeGuard Setup Guide
 
-This guide shows how to setup a ScopeGuard with a Gnosis Safe on the Rinkeby testnetwork.
+This guide shows how to setup a ScopeGuard with a Gnosis Safe on the sepolia testnetwork.
 
 _Note: transaction guards only work with safes on version 1.3.0 or greater._
 
@@ -15,7 +15,7 @@ Best practice is to enable another account that you control as a module to your 
 
 ## Prerequisites
 
-To start the process you need to create a Safe on the Rinkeby test network (e.g. via https://rinkeby.gnosis-safe.io). A Safe transaction is required to setup the ScopeGuard.
+To start the process you need to create a Safe on the sepolia test network (e.g. via https://sepolia.gnosis-safe.io). A Safe transaction is required to setup the ScopeGuard.
 
 Before anything else, you'll need to install the projects dependencies by running `yarn`.
 
@@ -40,15 +40,15 @@ Hardhat tasks can be used to deploy a ScopeGuard instance. There are two differe
 
 _Note: Multiple safes can use the same instance of a ScopeGuard, but they will all have the same settings controlled by the same `owner`. In most cases it is preferable for each safe to have its own instance of ScopeGuard._
 
-An example for this on Rinkeby would be:
+An example for this on sepolia would be:
 ```bash
-yarn hardhat setup --network rinkeby --owner <owner_address>
+yarn hardhat setup --network sepolia --owner <owner_address>
 ```
 
 or
 
 ```bash
-yarn hardhat setup --network rinkeby  --owner <owner_address> --proxied true
+yarn hardhat setup --network sepolia  --owner <owner_address> --proxied true
 ```
 
 This should return the address of the deployed Scope Guard. For this guide we assume this to be `0x3939393939393939393939393939393939393939`
@@ -56,7 +56,7 @@ This should return the address of the deployed Scope Guard. For this guide we as
 Once the module is deployed you should verify the source code (Note: If you used the factory deployment the contract should be already verified). If you use a network that is Etherscan compatible and you configure the `ETHERSCAN_API_KEY` in your environment you can use the provided hardhat task to do this.
 
 ```bash
-yarn hardhat verifyEtherscan --network rinkeby --guard <scope_guard_address> --owner <owner_address>
+yarn hardhat verifyEtherscan --network sepolia --guard <scope_guard_address> --owner <owner_address>
 ```
 
 ### Setting up the ScopeGuard
@@ -68,7 +68,7 @@ Allow any target addresses that the multisig owners should be allowed to call.
 #### Allow a target address
 
 ```bash
-yarn hardhat allowTarget --network rinkeby --guard <scope_guard_address> --target <target_address>
+yarn hardhat allowTarget --network sepolia --guard <scope_guard_address> --target <target_address>
 ```
 
 You should use this command once for each address that the multisig owners are allowed to call.
@@ -78,7 +78,7 @@ You should use this command once for each address that the multisig owners are a
 To limit the scope of an address to specific function signatures, you must toggle on `scoped` for that address and then allow the function signature for that address.
 
 ```bash
-yarn hardhat toggleScoped --network rinkeby --guard <scope_guard_address> --target <target_address>
+yarn hardhat toggleScoped --network sepolia --guard <scope_guard_address> --target <target_address>
 ```
 
 You can use this utility to generate the function signature for specific functions.
@@ -90,7 +90,7 @@ yarn hardhat getFunctionSignature --function <escaped_function_sighash>
 Then set allow the specific function signature.
 
 ```bash
-yarn hardhat allowFunction --network rinkeby --guard <scope_guard_address> --target <target_address> --sig <function_signature>
+yarn hardhat allowFunction --network sepolia --guard <scope_guard_address> --target <target_address> --sig <function_signature>
 ```
 
 An example of an escaped function sighash is `balanceOf\(address\)`.
@@ -100,7 +100,7 @@ An example of an escaped function sighash is `balanceOf\(address\)`.
 To allow the multisig owners to initiate delegate call transactions to an address, you must explicitly enable it for that target address.
 
 ```bash
-yarn hardhat allowDelegateCall --network rinkeby --guard <scope_guard_address> --target <target_address>
+yarn hardhat allowDelegateCall --network sepolia --guard <scope_guard_address> --target <target_address>
 ```
 
 #### Transferring Ownership of the guard
@@ -108,7 +108,7 @@ yarn hardhat allowDelegateCall --network rinkeby --guard <scope_guard_address> -
 Once you have set up your guard, you should transfer ownership to the appropriate address (usually the Safe that the guard will be enabled on).
 
 ```bash
-yarn hardhat transferOwnership --network rinkeby --guard <scope_guard_address> --newOwner <new_owner_address>
+yarn hardhat transferOwnership --network sepolia --guard <scope_guard_address> --newOwner <new_owner_address>
 ```
 
 ### Enabling the ScopeGuard

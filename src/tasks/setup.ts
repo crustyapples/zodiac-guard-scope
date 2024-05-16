@@ -18,7 +18,7 @@ const deployScopeGuard = async (
 
   if (taskArgs.proxied) {
     const chainId = await hardhatRuntime.getChainId();
-    const { transaction } = deployAndSetUpModule(
+    const { transaction } = await deployAndSetUpModule(
       "scopeGuard",
       {
         types: ["address"],
@@ -37,290 +37,121 @@ const deployScopeGuard = async (
 
   const Guard = await hardhatRuntime.ethers.getContractFactory("ScopeGuard");
   const guard = await Guard.deploy(taskArgs.owner);
+  await guard.deployed();
   console.log("ScopeGuard deployed to:", guard.address);
 };
 
 task("setup", "Deploys a ScopeGuard")
   .addParam("owner", "Address of the Owner", undefined, types.string)
-  .addParam(
-    "proxied",
-    "Deploys contract through factory",
-    false,
-    types.boolean,
-    true
-  )
+  .addParam("proxied", "Deploys contract through factory", false, types.boolean, true)
   .setAction(deployScopeGuard);
 
 task("verifyEtherscan", "Verifies the contract on etherscan")
   .addParam("guard", "Address of the ScopeGuard", undefined, types.string)
   .addParam("owner", "Address of the Owner", undefined, types.string)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
     await hardhatRuntime.run("verify", {
       address: taskArgs.guard,
       constructorArguments: [taskArgs.owner],
     });
   });
 
-task("allowTarget", "Allows a target address.")
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address to be allowed.",
-    undefined,
-    types.string
-  )
+task("setTargetAllowed", "Sets whether a target address is allowed")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("allowed", "True if the target should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.allowTarget(taskArgs.target);
-
-    console.log("Target allowed: ", taskArgs.target);
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setTargetAllowed(taskArgs.target, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Target ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task("disallowTarget", "Disallows a target address.")
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address to be disallowed.",
-    undefined,
-    types.string
-  )
+task("setDelegateCallAllowed", "Sets whether delegate calls are allowed to a target address")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("allowed", "True if delegate calls should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.disallowTarget(taskArgs.target);
-
-    console.log("Target disallowed: ", taskArgs.target);
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setDelegateCallAllowedOnTarget(taskArgs.target, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Delegate calls to ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task("allowDelegateCall", "Allows delegate calls to an allowed target address.")
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address on which delegate calls should be allowed.",
-    undefined,
-    types.string
-  )
+task("setScoped", "Sets whether a target address is scoped")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("scoped", "True if the target should be scoped", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.allowDelegateCall(taskArgs.target);
-
-    console.log("Delegate calls allowed to: ", taskArgs.target);
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setScoped(taskArgs.target, taskArgs.scoped);
+    await tx.wait();
+    console.log(`Target ${taskArgs.target} scoped: ${taskArgs.scoped}`);
   });
 
-task(
-  "disallowDelegateCall",
-  "Allows delegate calls to an disallowed target address."
-)
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address on which delegate calls should be disallowed.",
-    undefined,
-    types.string
-  )
+task("setFallbackAllowed", "Sets whether fallback is allowed on a target address")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("allowed", "True if fallback should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.disallowDelegateCall(taskArgs.target);
-
-    console.log("Delegate calls disallowed to: ", taskArgs.target);
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setFallbackAllowedOnTarget(taskArgs.target, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Fallback on ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task(
-  "toggleScoped",
-  "Toggles whether a target address is scoped to specific functions."
-)
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address to be (un)scoped.",
-    undefined,
-    types.string
-  )
+task("setValueAllowed", "Sets whether value transfers are allowed to a target address")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("allowed", "True if value transfers should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    let tx = await guard.toggleScoped(taskArgs.target);
-    let receipt = await tx.wait();
-
-    console.log(
-      "Scoped set to",
-      await guard.isScoped(taskArgs.target),
-      "for target address",
-      taskArgs.target
-    );
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setValueAllowedOnTarget(taskArgs.target, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Value transfers to ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task(
-  "allowFunction",
-  "Allows a function signagure to be called to an allowed target address."
-)
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address on which a function signature should be allowed.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "sig",
-    "Function signature of to be allowed on the target address.",
-    undefined,
-    types.string
-  )
+task("setAllowedFunction", "Sets whether a function is allowed on a target address")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("sig", "The function signature to allow", undefined, types.string)
+  .addParam("allowed", "True if the function should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.allowFunction(taskArgs.target, taskArgs.sig);
-
-    console.log(
-      "Function signature",
-      taskArgs.sig,
-      "allowed for",
-      taskArgs.target
-    );
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setAllowedFunction(taskArgs.target, taskArgs.sig, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Function ${taskArgs.sig} on ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task(
-  "disallowFunction",
-  "Allows a function signagure to be called to an disallowed target address."
-)
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "target",
-    "The target address on which a function signature should be disallowed.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "sig",
-    "Function signature of to be allowed on the target address.",
-    undefined,
-    types.string
-  )
+task("setAllowedParameter", "Sets whether a parameter is allowed for a function on a target address")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("target", "The target address", undefined, types.string)
+  .addParam("sig", "The function signature to allow the parameter for", undefined, types.string)
+  .addParam("index", "The index of the parameter to allow", undefined, types.int)
+  .addParam("value", "The parameter value to allow", undefined, types.string)
+  .addParam("allowed", "True if the parameter should be allowed", true, types.boolean)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    await guard.disallowFunction(taskArgs.target, taskArgs.sig);
-
-    console.log(
-      "Function signature",
-      taskArgs.sig,
-      "disallowed for",
-      taskArgs.target
-    );
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.setAllowedParameter(taskArgs.target, taskArgs.sig, taskArgs.index, taskArgs.value, taskArgs.allowed);
+    await tx.wait();
+    console.log(`Parameter ${taskArgs.value} for function ${taskArgs.sig} on ${taskArgs.target} allowed: ${taskArgs.allowed}`);
   });
 
-task(
-  "transferOwnership",
-  "Toggles whether a target address is scoped to specific functions."
-)
-  .addParam(
-    "guard",
-    "The address of the guard that you are seting up.",
-    undefined,
-    types.string
-  )
-  .addParam(
-    "newowner",
-    "The address that will be the new owner of the gaurd.",
-    undefined,
-    types.string
-  )
+task("transferOwnership", "Transfers ownership of the guard contract")
+  .addParam("guard", "The address of the guard", undefined, types.string)
+  .addParam("newowner", "The address of the new owner", undefined, types.string)
   .setAction(async (taskArgs, hardhatRuntime) => {
-    const [caller] = await hardhatRuntime.ethers.getSigners();
-    console.log("Using the account:", caller.address);
-    const guard = await hardhatRuntime.ethers.getContractAt(
-      "ScopeGuard",
-      taskArgs.guard
-    );
-    let tx = await guard.transferOwnership(taskArgs.newowner);
-    let receipt = await tx.wait();
-
-    console.log("ScopeGuard now owned by: ", await guard.owner());
+    const guard = await hardhatRuntime.ethers.getContractAt("ScopeGuard", taskArgs.guard);
+    const tx = await guard.transferOwnership(taskArgs.newowner);
+    await tx.wait();
+    console.log("ScopeGuard now owned by:", taskArgs.newowner);
   });
 
-task(
-  "getFunctionSignature",
-  "Returns the four-byte function signature of a given string. e.g. balanceOf\\(address\\)."
-)
-  .addParam(
-    "function",
-    "The string representation of the function selector. For example, balanceOf\\(address\\).",
-    undefined,
-    types.string
-  )
+task("getFunctionSignature", "Returns the four-byte function signature of a given string")
+  .addParam("function", "The string representation of the function selector", undefined, types.string)
   .setAction(async (taskArgs, hardhatRuntime) => {
     console.log(
-      hardhatRuntime.ethers.utils
-        .solidityKeccak256(["string"], [taskArgs.function])
-        .substring(0, 10)
+      hardhatRuntime.ethers.utils.solidityKeccak256(["string"], [taskArgs.function]).substring(0, 10)
     );
   });
 

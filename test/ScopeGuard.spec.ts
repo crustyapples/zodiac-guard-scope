@@ -236,14 +236,16 @@ describe("ScopeGuard", async () => {
       ).to.be.revertedWith("Target function is not allowed");
     });
 
-    // should allow if function sig is 0x12345678
-    it("should allow if function sig is 0x12345678 and explicitly approved", async () => {
+    it("should allow if function sig is explicitly approved", async () => {
       const { avatar, guard, tx } = await setupTests();
       await guard.setTargetAllowed(avatar.address, true);
       await guard.setScoped(avatar.address, true);
       await guard.setFallbackAllowedOnTarget(avatar.address, false);
-      await guard.setAllowedFunction(avatar.address, "0x12345678", true);
-      tx.data = "0x12345678";
+      const mintSig = ethers.utils.id("mint(address,uint256)");
+      // first 4 bytes of mintSig
+      const mintSig4 = mintSig.slice(0, 10);
+      await guard.setAllowedFunction(avatar.address, mintSig4, true);
+      tx.data = mintSig4;
       await expect(
         guard.checkTransaction(
           tx.to,

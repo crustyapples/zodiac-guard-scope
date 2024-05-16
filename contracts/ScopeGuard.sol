@@ -3,7 +3,7 @@ pragma solidity ^0.8.6;
 
 import "@gnosis.pm/zodiac/contracts/guard/BaseGuard.sol";
 import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 
 contract ScopeGuard is FactoryFriendly, BaseGuard {
@@ -269,8 +269,8 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
                 paramValue := mload(add(data, add(36, mul(i, 32))))
             }
 
-            // console.logBytes32(paramValue);
-            // console.log(allowedTargets[to].allowedParameters[functionSig][i][paramValue]);
+            console.logBytes32(paramValue);
+            console.log(allowedTargets[to].allowedParameters[functionSig][i][paramValue]);
 
             require(
                 allowedTargets[to].allowedParameters[functionSig][i][paramValue],

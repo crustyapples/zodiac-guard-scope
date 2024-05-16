@@ -236,6 +236,56 @@ describe("ScopeGuard", async () => {
       ).to.be.revertedWith("Target function is not allowed");
     });
 
+    // should allow if function sig is 0x12345678
+    it("should allow if function sig is 0x12345678 and explicitly approved", async () => {
+      const { avatar, guard, tx } = await setupTests();
+      await guard.setTargetAllowed(avatar.address, true);
+      await guard.setScoped(avatar.address, true);
+      await guard.setFallbackAllowedOnTarget(avatar.address, false);
+      await guard.setAllowedFunction(avatar.address, "0x12345678", true);
+      tx.data = "0x12345678";
+      await expect(
+        guard.checkTransaction(
+          tx.to,
+          tx.value,
+          tx.data,
+          tx.operation,
+          tx.avatarTxGas,
+          tx.baseGas,
+          tx.gasPrice,
+          tx.gasToken,
+          tx.refundReceiver,
+          tx.signatures,
+          user1.address
+        )
+      );
+    });
+
+    // should not allow if function sig is 0x12345678 and not explicitly approved
+    it("should revert if function sig is 0x12345678 and not explicitly approved", async () => {
+      const { avatar, guard, tx } = await setupTests();
+      await guard.setTargetAllowed(avatar.address, true);
+      await guard.setScoped(avatar.address, true);
+      await guard.setFallbackAllowedOnTarget(avatar.address, false);
+      // await guard.setAllowedFunction(avatar.address, "0x12345678", false);
+      tx.data = "0x12345678";
+      await expect(
+        guard.checkTransaction(
+          tx.to,
+          tx.value,
+          tx.data,
+          tx.operation,
+          tx.avatarTxGas,
+          tx.baseGas,
+          tx.gasPrice,
+          tx.gasToken,
+          tx.refundReceiver,
+          tx.signatures,
+          user1.address
+        )
+      ).to.be.revertedWith("Target function is not allowed");
+    });
+
     it("should revert if value is greater than zero and value is not allowed", async () => {
       const { avatar, guard, tx } = await setupTests();
       await guard.setTargetAllowed(avatar.address, true);

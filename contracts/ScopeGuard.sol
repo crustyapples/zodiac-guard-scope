@@ -3,6 +3,8 @@ pragma solidity ^0.8.6;
 
 import "@gnosis.pm/zodiac/contracts/guard/BaseGuard.sol";
 import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
+// import "hardhat/console.sol";
+
 
 contract ScopeGuard is FactoryFriendly, BaseGuard {
     event SetTargetAllowed(address target, bool allowed);
@@ -13,6 +15,13 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
     event SetFunctionAllowedOnTarget(
         address target,
         bytes4 functionSig,
+        bool allowed
+    );
+    event SetAllowedParameterOnTarget(
+        address target,
+        bytes4 functionSig,
+        uint256 paramIndex,
+        bytes32 allowedValue,
         bool allowed
     );
     event ScopeGuardSetup(address indexed initiator, address indexed owner);
@@ -40,6 +49,7 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
         bool fallbackAllowed;
         bool valueAllowed;
         mapping(bytes4 => bool) allowedFunctions;
+        mapping(bytes4 => mapping(uint256 => mapping(bytes32 => bool))) allowedParameters;
     }
 
     mapping(address => Target) public allowedTargets;
@@ -125,6 +135,30 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
         );
     }
 
+    /// @dev Sets whether or not a specific parameter value should be allowed for a function on a scoped target.
+    /// @notice Only callable by owner.
+    /// @param target Scoped address on which a function signature and parameter should be allowed/disallowed.
+    /// @param functionSig Function signature to be allowed/disallowed.
+    /// @param paramIndex Index of the parameter to be allowed/disallowed.
+    /// @param allowedValue Value of the parameter to be allowed/disallowed.
+    /// @param allow Bool to allow (true) or disallow (false) parameter value for the function on target.
+    function setAllowedParameter(
+        address target,
+        bytes4 functionSig,
+        uint256 paramIndex,
+        bytes32 allowedValue,
+        bool allow
+    ) public onlyOwner {
+        allowedTargets[target].allowedParameters[functionSig][paramIndex][allowedValue] = allow;
+        emit SetAllowedParameterOnTarget(
+            target,
+            functionSig,
+            paramIndex,
+            allowedValue,
+            allow
+        );
+    }
+
     /// @dev Returns bool to indicate if an address is an allowed target.
     /// @param target Address to check.
     function isAllowedTarget(address target) public view returns (bool) {
@@ -203,17 +237,44 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
             );
         }
         if (data.length >= 4) {
+            bytes4 functionSig = bytes4(data);
             require(
                 !allowedTargets[to].scoped ||
-                    allowedTargets[to].allowedFunctions[bytes4(data)],
+                    allowedTargets[to].allowedFunctions[functionSig],
                 "Target function is not allowed"
             );
+
+            if (allowedTargets[to].scoped) {
+                checkParameters(to, functionSig, data);
+            }
         } else {
             require(data.length == 0, "Function signature too short");
             require(
                 !allowedTargets[to].scoped ||
                     allowedTargets[to].fallbackAllowed,
                 "Fallback not allowed for this address"
+            );
+        }
+    }
+
+    function checkParameters(
+        address to,
+        bytes4 functionSig,
+        bytes memory data
+    ) internal view {
+        // uint256 paramCount = (data.length - 4) / 32;
+        for (uint256 i = 0; i < 1; i++) {
+            bytes32 paramValue;
+            assembly {
+                paramValue := mload(add(data, add(36, mul(i, 32))))
+            }
+
+            // console.logBytes32(paramValue);
+            // console.log(allowedTargets[to].allowedParameters[functionSig][i][paramValue]);
+
+            require(
+                allowedTargets[to].allowedParameters[functionSig][i][paramValue],
+                "Parameter value is not allowed"
             );
         }
     }

@@ -262,21 +262,18 @@ contract ScopeGuard is FactoryFriendly, BaseGuard {
         bytes4 functionSig,
         bytes memory data
     ) internal view {
-        // uint256 paramCount = (data.length - 4) / 32;
-        for (uint256 i = 0; i < 1; i++) {
-            bytes32 paramValue;
-            assembly {
-                paramValue := mload(add(data, add(36, mul(i, 32))))
-            }
-
-            console.logBytes32(paramValue);
-            console.log(allowedTargets[to].allowedParameters[functionSig][i][paramValue]);
-
-            require(
-                allowedTargets[to].allowedParameters[functionSig][i][paramValue],
-                "Parameter value is not allowed"
-            );
+        bytes32 paramValue;
+        assembly {
+            paramValue := mload(add(data, add(36, mul(0, 32))))
         }
+
+        console.logBytes32(paramValue);
+        console.log(allowedTargets[to].allowedParameters[functionSig][0][paramValue]);
+
+        require(
+            allowedTargets[to].allowedParameters[functionSig][0][paramValue],
+            "Parameter value is not allowed"
+        );
     }
 
     function checkAfterExecution(bytes32, bool) external view override {}

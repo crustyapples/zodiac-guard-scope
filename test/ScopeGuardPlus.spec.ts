@@ -3,14 +3,14 @@ import hre, { deployments, waffle, ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
 
-describe("ScopeGuard", async () => {
+describe("ScopeGuardPlus", async () => {
   const [user1, user2, user3] = waffle.provider.getWallets();
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture();
     const avatarFactory = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await avatarFactory.deploy();
-    const guardFactory = await hre.ethers.getContractFactory("ScopeGuard");
+    const guardFactory = await hre.ethers.getContractFactory("ScopeGuardPlus");
     const guard = await guardFactory.deploy(user1.address);
     await avatar.enableModule(user1.address);
     await avatar.setGuard(guard.address);

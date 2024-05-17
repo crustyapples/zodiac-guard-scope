@@ -6,7 +6,7 @@ import "@gnosis.pm/zodiac/contracts/factory/FactoryFriendly.sol";
 import "hardhat/console.sol";
 
 
-contract ScopeGuard is FactoryFriendly, BaseGuard {
+contract ScopeGuardPlus is FactoryFriendly, BaseGuard {
     event SetTargetAllowed(address target, bool allowed);
     event SetTargetScoped(address target, bool scoped);
     event SetFallbackAllowedOnTarget(address target, bool allowed);

@@ -8,7 +8,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const args = [AddressOne];
 
-  await deploy("ScopeGuard", {
+  await deploy("ScopeGuardPlus", {
     from: deployer,
     args,
     log: true,
